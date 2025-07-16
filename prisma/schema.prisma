@@ -1,0 +1,71 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  username  String    @unique
+  email     String    @unique
+  password  String
+  role      Role      @default(USER)
+  news      News[]
+  comments  Comment[]
+  logs      Log[]     @relation("UserLogs")
+}
+
+model News {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  title     String
+  content   String
+  createdAt DateTime  @default(now())
+  author    User      @relation(fields: [authorId], references: [id])
+  authorId  String    @db.ObjectId
+  comments  Comment[]
+  logs      Log[]     @relation("NewsLogs")
+}
+
+model Comment {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  content   String
+  createdAt DateTime  @default(now())
+  news      News      @relation(fields: [newsId], references: [id])
+  newsId    String    @db.ObjectId
+  user      User      @relation(fields: [userId], references: [id])
+  userId    String    @db.ObjectId
+  logs      Log[]     @relation("CommentLogs")
+}
+
+model Log {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @db.ObjectId
+  user       User      @relation("UserLogs", fields: [userId], references: [id])
+
+  target     String
+  request    String
+  createdAt  DateTime  @default(now())
+
+  newsId     String?   @db.ObjectId
+  news       News?     @relation("NewsLogs", fields: [newsId], references: [id])
+
+  commentId  String?   @db.ObjectId
+  comment    Comment?  @relation("CommentLogs", fields: [commentId], references: [id])
+}
+
+model LogExternal {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  ip        String
+  target    String
+  request   String
+  createdAt DateTime @default(now())
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
