@@ -8,16 +8,15 @@ datasource db {
 }
 
 model News {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  title     String
-  content   String
-  image     String?  
-  createdAt DateTime  @default(now())
-  author    User      @relation(fields: [authorId], references: [id])
-  authorId  String    @db.ObjectId
-  comments  Comment[]
-  logs      Log[]     @relation("NewsLogs")
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  image       String?   // cover e-paper
+  pdfUrl      String?   // file pdf e-paper
+  publishedAt DateTime? // tanggal terbit e-paper
+  createdAt   DateTime  @default(now())
+  comments    Comment[]
+  logs        Log[]     @relation("NewsLogs")
 }
+
 
 model User {
   id       String    @id @default(auto()) @map("_id") @db.ObjectId
@@ -27,7 +26,6 @@ model User {
   role     Role      @default(USER)
   image    String   // optional avatar/profile image
   onDelete Boolean   @default(false)
-  news     News[]
   comments Comment[]
   logs     Log[]     @relation("UserLogs")
 }
