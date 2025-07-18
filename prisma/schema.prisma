@@ -9,10 +9,11 @@ datasource db {
 
 model News {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
-  image       String?   // cover e-paper
+  image       String  // cover e-paper
   pdfUrl      String?   // file pdf e-paper
-  publishedAt DateTime? // tanggal terbit e-paper
-  createdAt   DateTime  @default(now())
+  publishedAt DateTime // tanggal terbit e-paper
+  created_at   DateTime  @default(now())
+  updatedAt   DateTime?  @updatedAt
   comments    Comment[]
   logs        Log[]     @relation("NewsLogs")
 }

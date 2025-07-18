@@ -3,6 +3,7 @@ import { globalEnv } from '../utils/globalEnv.utils'
 import { UserController } from '../bin/user/user.controller'
 import { Jwt } from '../helper/jwt.helper'
 import {uploadUser} from '../helper/UploadUser.helper'
+import { NewsController } from '../bin/news/news.controller'
 
 export const publicApi = express.Router()
 
@@ -22,3 +23,7 @@ publicApi.post(`${globalEnv.PREFIX}/logout`, UserController.Logout);
 /** Api For Request Otp */
 publicApi.post(`${globalEnv.PREFIX}/otp`, UserController.RequestOtp)
 publicApi.post(`${globalEnv.PREFIX}/otp/confirm`, UserController.ConfirmOtp)
+
+/** Api for news */
+publicApi.get(`${globalEnv.PREFIX}/news`, NewsController.getAllNews);
+publicApi.get(`${globalEnv.PREFIX}/news/:id`, NewsController.getNewsById);
