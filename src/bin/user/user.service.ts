@@ -46,6 +46,7 @@ export class UserService {
 
         return {
             user: {
+                id: Crypto.encode(user.id),
                 username: user.username,
                 email: user.email,
                 image: user.image,

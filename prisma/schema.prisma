@@ -14,6 +14,7 @@ model News {
   publishedAt DateTime // tanggal terbit e-paper
   created_at   DateTime  @default(now())
   updatedAt   DateTime?  @updatedAt
+  savedBy Saved[]
   comments    Comment[]
   logs        Log[]     @relation("NewsLogs")
 }
@@ -28,6 +29,7 @@ model User {
   image    String   // optional avatar/profile image
   onDelete Boolean   @default(false)
   comments Comment[]
+  savedNews Saved[]
   logs     Log[]     @relation("UserLogs")
 }
 
@@ -42,6 +44,18 @@ model Comment {
   userId    String   @db.ObjectId
   logs      Log[]    @relation("CommentLogs")
 }
+
+model Saved {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String   @db.ObjectId
+
+  news      News     @relation(fields: [newsId], references: [id])
+  newsId    String   @db.ObjectId
+
+  savedAt   DateTime @default(now())
+}
+
 
 model Otp {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId

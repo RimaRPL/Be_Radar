@@ -4,6 +4,7 @@ import { UserController } from '../bin/user/user.controller'
 import { Jwt } from '../helper/jwt.helper'
 import {uploadUser} from '../helper/UploadUser.helper'
 import { NewsController } from '../bin/news/news.controller'
+import { savedController } from '../bin/saved/saved.controller'
 
 export const publicApi = express.Router()
 
@@ -21,9 +22,15 @@ publicApi.delete(`${globalEnv.PREFIX}/deleteUser/:id`,Jwt.jwtValidator, UserCont
 publicApi.post(`${globalEnv.PREFIX}/logout`, UserController.Logout);
 
 /** Api For Request Otp */
+
 publicApi.post(`${globalEnv.PREFIX}/otp`, UserController.RequestOtp)
 publicApi.post(`${globalEnv.PREFIX}/otp/confirm`, UserController.ConfirmOtp)
 
 /** Api for news */
 publicApi.get(`${globalEnv.PREFIX}/news`, NewsController.getAllNews);
 publicApi.get(`${globalEnv.PREFIX}/news/:id`, NewsController.getNewsById);
+
+/** Api for saved */
+publicApi.post(`${globalEnv.PREFIX}/saved/create`, Jwt.jwtValidator, savedController.createSaved);
+publicApi.get(`${globalEnv.PREFIX}/get/saved`, Jwt.jwtValidator, savedController.getSaved);
+publicApi.delete(`${globalEnv.PREFIX}/saved/delete/:id`, Jwt.jwtValidator, savedController.deleteSaved);
