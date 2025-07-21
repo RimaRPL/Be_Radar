@@ -7,6 +7,7 @@ import { NewsController } from '../bin/news/news.controller'
 import { savedController } from '../bin/saved/saved.controller'
 import { CommentController } from '../bin/comment/comment.controller'
 import { LikeController } from '../bin/like/like.controller'
+import { activityController } from '../bin/activity/activity.controller'
 
 export const publicApi = express.Router()
 
@@ -43,3 +44,7 @@ publicApi.get(`${globalEnv.PREFIX}/comments/all`, Jwt.jwtValidator, CommentContr
 
 /** Api for likes */
 publicApi.post(`${globalEnv.PREFIX}/likes`, Jwt.jwtValidator, LikeController.likeNews);
+
+/** Api for activity */
+publicApi.get(`${globalEnv.PREFIX}/activity/comments`, Jwt.jwtValidator, activityController.getUserComents);
+publicApi.get(`${globalEnv.PREFIX}/activity/likes`, Jwt.jwtValidator, activityController.getUserLikes);
