@@ -1,4 +1,5 @@
 import express from "express"
+import cors from "cors";
 import dotenv from "dotenv";
 import { connectDb } from "./config/db";
 import path from "path";
@@ -11,6 +12,11 @@ const app = express();
 app.use(express.json());
 
 connectDb()
+
+app.use(cors({
+  origin: "http://192.168.1.93:8081", // 🟢 Ini IP Expo 
+  credentials: true
+}));
 
 // Middleware for serving static files
 app.use("/user", express.static(path.resolve("public/user")));
