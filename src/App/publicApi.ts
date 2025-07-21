@@ -6,6 +6,7 @@ import { uploadUser } from '../helper/UploadUser.helper'
 import { NewsController } from '../bin/news/news.controller'
 import { savedController } from '../bin/saved/saved.controller'
 import { CommentController } from '../bin/comment/comment.controller'
+import { LikeController } from '../bin/like/like.controller'
 
 export const publicApi = express.Router()
 
@@ -39,3 +40,6 @@ publicApi.post(`${globalEnv.PREFIX}/comments/create`, Jwt.jwtValidator, CommentC
 publicApi.put(`${globalEnv.PREFIX}/comments/update`, Jwt.jwtValidator, CommentController.updateComment);    
 publicApi.delete(`${globalEnv.PREFIX}/comments/delete/:id`, Jwt.jwtValidator, CommentController.deleteComent);
 publicApi.get(`${globalEnv.PREFIX}/comments/all`, Jwt.jwtValidator, CommentController.getAllComments);
+
+/** Api for likes */
+publicApi.post(`${globalEnv.PREFIX}/likes`, Jwt.jwtValidator, LikeController.likeNews);
