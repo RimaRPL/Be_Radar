@@ -26,7 +26,7 @@ model User {
   email     String    @unique
   password  String
   role      Role      @default(USER)
-  image     String // optional avatar/profile image
+  image     String? // optional avatar/profile image
   onDelete  Boolean   @default(false)
   comments  Comment[]
   savedNews Saved[]

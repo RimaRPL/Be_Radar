@@ -8,24 +8,14 @@ import { removeFileIfExists } from "../../helper/delete.file.helper";
 export class UserController {
     static async Register(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
         try {
-
-            if (!req.files || !(req.files as Express.Multer.File[]).length) {
-                throw new ErrorHandler(400, "User harus memiliki minimal 1 gambar");
-            }
             const request: register = {
                 username: req.body.username,
                 email: req.body.email,
-                password: req.body.password,
-                image: (req.files as Express.Multer.File[])[0].filename, // Assuming the first file is the image
+                password: req.body.password
             }
             const response = await UserService.Register(request)
             Wrapper.success(res, true, response, 'Succes Register', 200)
         } catch (error) {
-                  if (req.files) {
-        for (const file of req.files as Express.Multer.File[]) {
-          removeFileIfExists(`public/user/${file.filename}`);
-        }
-      }
             next(error)
         }
     }

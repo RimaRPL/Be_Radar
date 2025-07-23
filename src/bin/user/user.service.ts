@@ -37,8 +37,7 @@ export class UserService {
             data: {
                 username: userRequest.username,
                 email: userRequest.email,
-                password: hashedPassword,
-                image: userRequest.image,
+                password: hashedPassword
             },
         });
 
@@ -49,7 +48,6 @@ export class UserService {
                 id: Crypto.encode(user.id),
                 username: user.username,
                 email: user.email,
-                image: user.image,
             }
         }
     };

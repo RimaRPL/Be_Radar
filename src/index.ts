@@ -14,7 +14,7 @@ app.use(express.json());
 connectDb()
 
 app.use(cors({
-  origin: "http://192.168.1.93:8081", // 🟢 Ini IP Expo 
+  origin: "*", // 🟢 Ini IP Expo 
   credentials: true
 }));
 

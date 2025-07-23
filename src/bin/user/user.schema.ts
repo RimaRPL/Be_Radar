@@ -31,12 +31,7 @@ export class userSchema {
     email: Joi.string().email().required().messages({
       "string.email": "Format email tidak valid",
       "string.empty": "Email tidak boleh kosong",
-    }),
-    image: Joi.string().required().messages({
-      "string.base": "Link gambar harus berupa teks",
-      "string.uri": "Format URL gambar tidak valid",
-      "string.empty": "Gambar tidak boleh kosong",
-    }),
+    })
   })
 
   static readonly updateUser = Joi.object({

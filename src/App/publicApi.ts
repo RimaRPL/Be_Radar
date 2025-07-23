@@ -12,7 +12,7 @@ import { activityController } from '../bin/activity/activity.controller'
 export const publicApi = express.Router()
 
 /** Register */
-publicApi.post(`${globalEnv.PREFIX}/register`, uploadUser.array('image', 1), UserController.Register)
+publicApi.post(`${globalEnv.PREFIX}/register`, UserController.Register)
 
 /** Login */
 publicApi.post(`${globalEnv.PREFIX}/login`, UserController.Login)
