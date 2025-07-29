@@ -28,6 +28,7 @@ export class NewsService {
             data: {
                 image: userRequest.image,
                 pdfUrl: userRequest.pdfUrl,
+                region: userRequest.region || "TULUNGAGUNG", // Default to "TULUNGAGUNG"
                 publishedAt: userRequest.publishedAt,
             }
         });
@@ -64,6 +65,7 @@ export class NewsService {
             data: {
                 image: userRequest.image,
                 pdfUrl: userRequest.pdfUrl,
+                region: userRequest.region || isNewsExist.region, 
             }
         });
 
@@ -112,8 +114,12 @@ export class NewsService {
             ...(userRequest.search && {
                 name: {
                     contains: userRequest.search,
+                    mode: "insensitive",
                 },
             }),
+              ...(userRequest.region && {
+    region: userRequest.region,
+  }),
             created_at: {
                 gte: new Date(`${userRequest.periode}-01-01T00:00:00.000Z`),
                 lte: new Date(`${userRequest.periode}-12-31T23:59:59.999Z`),

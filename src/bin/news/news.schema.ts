@@ -12,6 +12,13 @@ export class newsSchema {
             "date.base": "Tanggal terbit tidak valid",
             "any.required": "Tanggal terbit wajib diisi",
         }),
+        region: Joi.string()
+            .valid("TULUNGAGUNG", "BLITAR", "TRENGGALEK")
+            .required()
+            .messages({
+                "any.only": "Wilayah tidak valid (TULUNGAGUNG, BLITAR, TRENGGALEK)",
+                "any.required": "Wilayah wajib diisi",
+            }),
     })
 
     static readonly updateNews = Joi.object({
@@ -28,6 +35,13 @@ export class newsSchema {
             "date.base": "Tanggal terbit tidak valid",
             "any.required": "Tanggal terbit wajib diisi",
         }),
+        region: Joi.string()
+            .valid("TULUNGAGUNG", "BLITAR", "TRENGGALEK")
+            .optional()
+            .messages({
+                "any.only": "Wilayah tidak valid (TULUNGAGUNG, BLITAR, TRENGGALEK)",
+                "any.required": "Wilayah wajib diisi",
+            }),
     })
 
     static readonly getnewsbyid = Joi.object({
@@ -44,9 +58,15 @@ export class newsSchema {
         }),
         page: Joi.number().integer().min(1).required(),
         quantity: Joi.number().integer().min(1).max(100).required(),
+        region: Joi.string()
+            .valid("TULUNGAGUNG", "BLITAR", "TRENGGALEK")
+            .optional()
+            .messages({
+                "any.only": "Wilayah hanya bisa TULUNGAGUNG, BLITAR, atau TRENGGALEK",
+            }),
     });
 
-        static readonly deletenews = Joi.object({
+    static readonly deletenews = Joi.object({
         id: Joi.string().required().messages({
             "string.length": "ID news harus 24 karakter (ObjectId)",
             "any.required": "ID news wajib diisi",

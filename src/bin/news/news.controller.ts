@@ -4,6 +4,7 @@ import { CreateNewsRequest, getNews, UpdateNewsRequest } from "./news.model";
 import { NewsService } from "./news.service";
 import { Wrapper } from "../../utils/wrapper.utils";
 import { removeFileIfExists } from "../../helper/delete.file.helper";
+import { request } from "http";
 
 export class NewsController {
   static async createNews(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
@@ -20,6 +21,7 @@ export class NewsController {
       const request: CreateNewsRequest = {
         image: files.image[0].path,
         pdfUrl: files.pdfUrl[0].path,
+        region: req.body.region || "TULUNGAGUNG",
         publishedAt: new Date(),
       };
 
