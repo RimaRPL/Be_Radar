@@ -1,7 +1,6 @@
 import { ErrorHandler } from "../../config/custom.config";
 import loggerConfig from "../../config/logger.config";
 import prisma from "../../config/prisma.config";
-import { filterProfanity } from "../../utils/filterProfanity";
 import { Validator } from "../../utils/validator.utils";
 import { commentModel, deleteModel, getcommentModel } from "./comment.model";
 
@@ -15,11 +14,6 @@ export class commentService {
         const scp = "Comment"
 
         const userRequest = Validator.Validate(CommentSchema.comment, req)
-
-        filterProfanity(userRequest.content)
-        if (filter.isProfane(userRequest.content)) {
-            throw new ErrorHandler(400, "Komentar mengandung kata tidak pantas");
-        }
 
         const create = await prisma.comment.create({
             data: {
