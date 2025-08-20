@@ -5,6 +5,8 @@ import { NewsService } from "./news.service";
 import { Wrapper } from "../../utils/wrapper.utils";
 import { removeFileIfExists } from "../../helper/delete.file.helper";
 import { request } from "http";
+import path from "path";
+import fs from "fs";
 
 export class NewsController {
   static async createNews(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
@@ -51,21 +53,43 @@ export class NewsController {
         ...req.body,
       };
 
-      // kalau ada file image
-      if ((req.files as any)?.image) {
+      const oldNews = await NewsService.getNewsById({ id });
+
+      // Hapus file gambar lama jika ada
+      if ((req.files as any)?.image && oldNews?.image) {
+        const oldImagePath = path.resolve("public", oldNews.image); // lebih aman
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+        }
         request.image = `news/${(req.files as any).image[0].filename}`;
       }
 
-      // kalau ada file pdf
-      if ((req.files as any)?.pdfUrl) {
+      // Hapus file PDF lama jika ada
+      if ((req.files as any)?.pdfUrl && Array.isArray(oldNews?.pdfUrl) && oldNews.pdfUrl.length > 0) {
+        oldNews.pdfUrl.forEach((pdfPath: string) => {
+          const fullPdfPath = path.resolve("public", pdfPath);
+          if (fs.existsSync(fullPdfPath)) {
+            fs.unlinkSync(fullPdfPath);
+          }
+        });
+
         request.pdfUrl = (req.files as any).pdfUrl.map((f: any) => `news/${f.filename}`);
       }
 
       const response = await NewsService.updateNews(request);
       Wrapper.success(res, true, response, "Berhasil memperbarui berita", 200)
     } catch (error) {
-      if (req.body.originalname)
-        removeFileIfExists(`product/${req.body.originalname}`);
+      // Hapus file baru jika terjadi error saat upload
+      if ((req.files as any)?.image) {
+        const newImagePath = path.resolve("public", "news", (req.files as any).image[0].filename);
+        if (fs.existsSync(newImagePath)) fs.unlinkSync(newImagePath);
+      }
+      if ((req.files as any)?.pdfUrl) {
+        (req.files as any).pdfUrl.forEach((f: any) => {
+          const newPdfPath = path.resolve("public", "news", f.filename);
+          if (fs.existsSync(newPdfPath)) fs.unlinkSync(newPdfPath);
+        });
+      }
       next(error);
     }
   }

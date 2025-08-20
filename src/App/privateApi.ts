@@ -27,7 +27,7 @@ privateApi.post(
 
 //update news
 privateApi.post(
-  `${globalEnv.PREFIX}/news/update`,
+  `${globalEnv.PREFIX}/news/update/:id`,
   Jwt.jwtValidator,
   Jwt.allowedRole(roles.ADMIN),
   uploadNews.fields([
