@@ -58,30 +58,36 @@ export class UserService {
 
         const userRequest = Validator.Validate(userSchema.login, req);
 
+        // Jangan pernah cari user pakai password langsung ke database
+        // cara berdasarkan email atau username yang aktif 
         const isUserExist = await prisma.user.findFirst({
             where: {
                 AND: [
                     {
                         OR: [
+                            // userRequest.email ? { email: userRequest.email } : {},
+                            // userRequest.username ? { username: userRequest.username } : {},
                             { username: userRequest.username },
                             { email: userRequest.email },
-                            { password: userRequest.password },
+                            // { password: userRequest.password },
                         ],
                     },
                     {
                         OR: [
-                            { onDelete: false },
+                            { onDelete: false },  //cari yang tidak dihapus
                         ]
                     }
                 ],
             },
         });
 
+        // jika user tdk ditemukan 
         if (!isUserExist) {
             loggerConfig.error(ctx, "User not found", scp);
             throw new ErrorHandler(400, "Akun belum terdaftar");
         }
 
+        // membandingkan pw yg diinput dgn pw yg di hast di db
         const isPasswordMatch = await bcrypt.compare(
             userRequest.password,
             isUserExist.password
@@ -92,6 +98,7 @@ export class UserService {
             throw new ErrorHandler(400, "Password anda salah");
         }
 
+        // menggenerate token stlh login berhasil
         const token = Jwt.createJwt({
             id: Crypto.encode(isUserExist.id),
             role: isUserExist.role,
@@ -99,6 +106,7 @@ export class UserService {
             username: isUserExist.username
         });
 
+        // mengkirim token dan rolse sbg response
         return {
             token,
             role: isUserExist.role,
@@ -111,6 +119,7 @@ export class UserService {
 
         const userRequest = Validator.Validate(userSchema.updateUser, req);
 
+        // dicari berdasar id
         const existing = await prisma.user.findFirst({
             where: {
                 id: userRequest.id,
@@ -122,22 +131,68 @@ export class UserService {
             throw new ErrorHandler(404, "User Tidak Ditemukan");
         }
 
+        // mengecek jk username br sdh digunakan oleh user lain
+        if (userRequest.username && userRequest.username !== existing.username) {
+            const usernameTaken = await prisma.user.findFirst({
+                where: {
+                    username: userRequest.username,
+                    NOT: { id: userRequest.id }, // kecuali dirinya sendiri
+                },
+            });
+            if (usernameTaken) {
+                throw new ErrorHandler(409, "Username sudah digunakan");
+            }
+        }
+
+        //  jika email baru sudah digunakan oleh user lain
+        if (userRequest.email && userRequest.email !== existing.email) {
+            const emailTaken = await prisma.user.findFirst({
+                where: {
+                    email: userRequest.email,
+                    NOT: { id: userRequest.id },
+                },
+            });
+            if (emailTaken) {
+                throw new ErrorHandler(409, "Email sudah digunakan");
+            }
+        }
+
+        // jk pw diubah, hash ulang pw baru
+        let updatedPassword = existing.password;
+        if (
+            userRequest.password &&
+            !(await bcrypt.compare(userRequest.password, existing.password)) // Jika password baru beda
+        ) {
+            updatedPassword = await bcrypt.hash(userRequest.password, 10);
+        }
+
+        console.log('Data updateUser masuk:', userRequest);
+        console.log('Sebelum update:', existing);
+
+        // mengupdate data
         const updateData = {
             email: userRequest.email ?? existing.email,
             username: userRequest.username ?? existing.username,
-            password: userRequest.password ?? existing.password,
+            password: updatedPassword,
+            // password: userRequest.password ?? existing.password,
             image: userRequest.image ?? existing.image,
         };
 
+        console.log('Akan di-update menjadi:', updateData);
+
+        // update data user di database
         const updated = await prisma.user.update({
             where: { id: req.id },
             data: updateData,
         });
 
-        if (existing.image) {
+        // Hapus file lama jika gambar profil diubah
+        if (existing.image && userRequest.image && existing.image !== userRequest.image) {
             removeFileIfExists(existing.image);
         }
-        return {};
+
+        // kirim response user telah diupdate
+        return toUserResponse(updated);
     }
 
     static async getProfile(req: string) {
@@ -191,7 +246,7 @@ export class UserService {
             },
         });
 
-        if(isUserExist.image) {
+        if (isUserExist.image) {
             removeFileIfExists(isUserExist.image);
         }
 
@@ -257,16 +312,34 @@ export class UserService {
             where: { id: otpRecord.id }
         });
 
+        // ✅ Ambil data user dari email
+        const user = await prisma.user.findUnique({
+            where: {
+                email: otpRecord.email,
+            },
+        });
+
+        if (!user) {
+            loggerConfig.error(ctx, "User not found", scp);
+            throw new ErrorHandler(404, "Pengguna tidak ditemukan");
+        }
         const token = jwt.sign(
-            { email: otpRecord.email },
+            {
+                id: Crypto.encode(user.id),
+                email: otpRecord.email
+            },
             globalEnv.JWT_SECRET!,
             { expiresIn: "1h" }
         )
 
+        console.log("Generated token:", token);
+        console.log("Decoded token:", jwt.decode(token));
+
         loggerConfig.info(ctx, "OTP verified, reset token generated", scp);
         return {
             message: 'OTP berhasil diverifikasi',
-            token
+            token,
+            id: user.id,
         }
     }
 }   

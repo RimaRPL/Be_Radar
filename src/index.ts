@@ -21,6 +21,9 @@ app.use(cors({
 // Middleware for serving static files
 app.use("/user", express.static(path.resolve("public/user")));
 
+//buat munculin gambar di news
+app.use("/news", express.static(path.resolve("public/news")));
+
 // Apply public API routes
 app.use(publicApi)
 

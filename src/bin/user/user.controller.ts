@@ -35,6 +35,13 @@ export class UserController {
         try {
             const request: updateUser = req.body as updateUser
 
+            // pakai array() jadi req.files (bentuk array)
+            const files = req.files as Express.Multer.File[];
+
+            if (files && files.length > 0) {
+                request.image = files[0].filename; // mengambil nama file pertama
+            }
+
             const response = await UserService.updateUser(request)
             Wrapper.success(res, true, response, 'Succes Updated', 200)
         } catch (error) {

@@ -20,9 +20,11 @@ export class NewsController {
 
       const request: CreateNewsRequest = {
         image: files.image[0].path,
-        pdfUrl: files.pdfUrl[0].path,
+        // pdfUrl: files.pdfUrl[0].path, // ini buat yang satu
+        pdfUrl: files.pdfUrl.map(file => file.path), // ini buat yang lebih dari satu
         region: req.body.region || "TULUNGAGUNG",
-        publishedAt: new Date(),
+        // publishedAt: new Date(),
+        publishedAt: req.body.publishedAt ? new Date(req.body.publishedAt) : new Date(),
       };
 
       const response = await NewsService.createNews(request);
@@ -43,7 +45,21 @@ export class NewsController {
 
   static async updateNews(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
     try {
-      const request: UpdateNewsRequest = req.body as UpdateNewsRequest;
+      const id = req.params.id; // ambil id dari URL
+      const request: UpdateNewsRequest = {
+        id,
+        ...req.body,
+      };
+
+      // kalau ada file image
+      if ((req.files as any)?.image) {
+        request.image = `news/${(req.files as any).image[0].filename}`;
+      }
+
+      // kalau ada file pdf
+      if ((req.files as any)?.pdfUrl) {
+        request.pdfUrl = (req.files as any).pdfUrl.map((f: any) => `news/${f.filename}`);
+      }
 
       const response = await NewsService.updateNews(request);
       Wrapper.success(res, true, response, "Berhasil memperbarui berita", 200)

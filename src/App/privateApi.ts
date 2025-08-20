@@ -20,19 +20,19 @@ privateApi.post(
   Jwt.allowedRole(roles.ADMIN),
   uploadNews.fields([
     { name: 'image', maxCount: 1 },
-    { name: 'pdfUrl', maxCount: 1 }
+    { name: 'pdfUrl', maxCount: 10 }
   ]),
   NewsController.createNews
 )
 
 //update news
-privateApi.put(
+privateApi.post(
   `${globalEnv.PREFIX}/news/update`,
   Jwt.jwtValidator,
   Jwt.allowedRole(roles.ADMIN),
   uploadNews.fields([
     { name: 'image', maxCount: 1 },
-    { name: 'pdfUrl', maxCount: 1 }
+    { name: 'pdfUrl', maxCount: 10 }
   ]),
   NewsController.updateNews
 )

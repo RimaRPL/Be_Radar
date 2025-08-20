@@ -5,7 +5,7 @@ import { Validator } from "../../utils/validator.utils";
 import { commentModel, deleteModel, getcommentModel } from "./comment.model";
 
 import { CommentSchema } from "./comment.schema";
-import { Filter } from "bad-words";
+import Filter  from "bad-words";
 const filter = new Filter();
 
 export class commentService {

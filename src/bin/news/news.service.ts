@@ -13,9 +13,16 @@ export class NewsService {
 
         const userRequest = Validator.Validate(newsSchema.createNews, req);
 
+        // Ambil PDF pertama saja
+        const pdfSingle = Array.isArray(userRequest.pdfUrl)
+            ? userRequest.pdfUrl[0]
+            : userRequest.pdfUrl;
+
         const isNewsExist = await prisma.news.count({
             where: {
-                OR: [{ pdfUrl: userRequest.pdfUrl }]
+                pdfUrl: pdfSingle,   // ini masih 1 diambil bagian pertama aja 
+                // OR: [{ pdfUrl: userRequest.pdfUrl }]
+                //  OR: userRequest.pdfUrl.map((pdf: string) => ({ pdfUrl: { has: pdf } }))
             },
         });
 
@@ -27,7 +34,8 @@ export class NewsService {
         const create = await prisma.news.create({
             data: {
                 image: userRequest.image,
-                pdfUrl: userRequest.pdfUrl,
+                // pdfUrl: userRequest.pdfUrl,
+                pdfUrl: pdfSingle,
                 region: userRequest.region || "TULUNGAGUNG", // Default to "TULUNGAGUNG"
                 publishedAt: userRequest.publishedAt,
             }
@@ -55,8 +63,9 @@ export class NewsService {
             throw new ErrorHandler(404, "Berita tidak ditemukan");
         }
 
-        userRequest.image = userRequest.image || isNewsExist.image;
-        userRequest.pdfUrl = userRequest.pdfUrl || isNewsExist.pdfUrl;
+        userRequest.image = userRequest.image ?? isNewsExist.image;
+        userRequest.pdfUrl = userRequest.pdfUrl ?? isNewsExist.pdfUrl;
+        userRequest.region = userRequest.region ?? isNewsExist.region ?? "TULUNGAGUNG";
 
         await prisma.news.update({
             where: {
@@ -65,7 +74,7 @@ export class NewsService {
             data: {
                 image: userRequest.image,
                 pdfUrl: userRequest.pdfUrl,
-                region: userRequest.region || isNewsExist.region, 
+                region: userRequest.region,
             }
         });
 
@@ -101,6 +110,7 @@ export class NewsService {
             image: isNewsExist.image,
             pdfUrl: isNewsExist.pdfUrl,
             publishedAt: isNewsExist.publishedAt,
+            region: isNewsExist.region, // <--- tambahkan ini
         }
     }
 
@@ -110,16 +120,16 @@ export class NewsService {
 
         const userRequest = Validator.Validate(newsSchema.getallnews, req);
 
-        const filter = {
+        const filter: any = {
             ...(userRequest.search && {
                 name: {
                     contains: userRequest.search,
                     mode: "insensitive",
                 },
             }),
-              ...(userRequest.region && {
-    region: userRequest.region,
-  }),
+            ...(userRequest.region && {
+                region: userRequest.region,
+            }),
             created_at: {
                 gte: new Date(`${userRequest.periode}-01-01T00:00:00.000Z`),
                 lte: new Date(`${userRequest.periode}-12-31T23:59:59.999Z`),

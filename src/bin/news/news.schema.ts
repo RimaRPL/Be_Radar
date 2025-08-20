@@ -5,8 +5,11 @@ export class newsSchema {
         image: Joi.string().required().messages({
             "string.empty": "Cover e-paper wajib diisi",
         }),
-        pdfUrl: Joi.string().required().messages({
-            "string.empty": "File PDF e-paper wajib diisi",
+        // pdfUrl: Joi.string().required().messages({
+        //     "string.empty": "File PDF e-paper wajib diisi",
+        // }),
+        pdfUrl: Joi.array().items(Joi.string().required()).min(1).messages({
+            "array.min": "Minimal 1 file PDF e-paper wajib diunggah",
         }),
         publishedAt: Joi.date().required().messages({
             "date.base": "Tanggal terbit tidak valid",

@@ -1,15 +1,18 @@
+import { Region } from "@prisma/client";
+
 export interface CreateNewsRequest {
   image: string;
-  pdfUrl: string;
+  pdfUrl: string[];   //ganti agar array
   publishedAt: Date;
   region?: string; // Optional, default to "TULUNGAGUNG"
 }
 
 export interface UpdateNewsRequest {
+  id: string;
   image?: string;
   pdfUrl?: string;
   publishedAt?: Date;
-  region?: string; // Optional, can be "TULUNGAGUNG", "BLITAR", or "TRENGGALEK"
+  region?: Region; // Optional, can be "TULUNGAGUNG", "BLITAR", or "TRENGGALEK"
 }
 
 export interface getNewsById {
