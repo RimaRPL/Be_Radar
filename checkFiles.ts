@@ -1,51 +1,64 @@
+import { PrismaClient } from "@prisma/client";
 import fs from "fs";
 import path from "path";
-import { MongoClient, ObjectId } from "mongodb";
 
-// Ganti dengan URL MongoDB kamu
-const MONGO_URI = "mongodb+srv://Radar_Apps:sMbGOTI7bGrMWOsE@cluster0.olyyqhw.mongodb.net/Cluster0?retryWrites=true&w=majority&appName=Cluster0";
-const DB_NAME = "Cluster0";
-const COLLECTION_NAME = "News";
+const prisma = new PrismaClient();
 
-async function checkFiles() {
-  const client = new MongoClient(MONGO_URI);
-  try {
-    await client.connect();
-    const db = client.db(DB_NAME);
-    const collection = db.collection(COLLECTION_NAME);
-
-    const newsList = await collection.find({}).toArray();
-
-    console.log(`Total berita: ${newsList.length}`);
-
-    newsList.forEach((news) => {
-      // Cek gambar
-      if (news.image) {
-        const imgPath = path.resolve("public", news.image);
-        if (fs.existsSync(imgPath)) {
-          console.log(`✅ Gambar ada: ${news.image}`);
-        } else {
-          console.log(`❌ Gambar hilang: ${news.image}`);
-        }
-      }
-
-      // Cek PDF
-      if (news.pdfUrl && Array.isArray(news.pdfUrl)) {
-        news.pdfUrl.forEach((pdf: string) => {
-          const pdfPath = path.resolve("public", pdf);
-          if (fs.existsSync(pdfPath)) {
-            console.log(`✅ PDF ada: ${pdf}`);
-          } else {
-            console.log(`❌ PDF hilang: ${pdf}`);
-          }
-        });
-      }
-    });
-  } catch (error) {
-    console.error("Error:", error);
-  } finally {
-    await client.close();
-  }
+function fileExists(filePath: string): boolean {
+  // ubah \ jadi / lalu normalize biar cross-platform
+  const normalized = path.normalize(filePath.replace(/\\/g, "/"));
+  const absolute = path.resolve(normalized);
+  return fs.existsSync(absolute);
 }
 
-checkFiles();
+async function main() {
+  const allNews = await prisma.news.findMany({
+    select: {
+      id: true,
+      image: true,
+      pdfUrl: true,
+      onDelete: true,
+      created_at: true,
+    },
+  });
+
+  console.log(`\n📊 Total berita: ${allNews.length}\n`);
+
+  for (const news of allNews) {
+    console.log(`📰 Cek News id=${news.id}`);
+    if (news.onDelete !== undefined) {
+      console.log(`✅ Field 'onDelete' ada (value: ${news.onDelete})`);
+    } else {
+      console.log("⚠️ Field 'onDelete' tidak ada");
+    }
+
+    // cek image
+    if (news.image) {
+      if (fileExists(news.image)) {
+        console.log(`✅ Gambar ada: ${news.image}`);
+      } else {
+        console.log(`❌ Gambar hilang: ${news.image}`);
+      }
+    }
+
+    // cek pdf (array)
+    if (news.pdfUrl && Array.isArray(news.pdfUrl)) {
+      for (const pdf of news.pdfUrl) {
+        if (fileExists(pdf)) {
+          console.log(`✅ PDF ada: ${pdf}`);
+        } else {
+          console.log(`❌ PDF hilang: ${pdf}`);
+        }
+      }
+    }
+
+    console.log("----");
+  }
+
+  await prisma.$disconnect();
+}
+
+main().catch((e) => {
+  console.error(e);
+  prisma.$disconnect();
+});

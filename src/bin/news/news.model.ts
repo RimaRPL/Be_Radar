@@ -10,7 +10,7 @@ export interface CreateNewsRequest {
 export interface UpdateNewsRequest {
   id: string;
   image?: string;
-  pdfUrl?: string;
+  pdfUrl?: string[]; // array
   publishedAt?: Date;
   region?: Region; // Optional, can be "TULUNGAGUNG", "BLITAR", or "TRENGGALEK"
 }

@@ -14,6 +14,7 @@ const NEWS_FOLDER = path.resolve("public", "news");
 interface News {
     image?: string;
     pdfUrl?: string[];
+     onDeleted?: boolean;  //ini nanti kalau sudah migrate baru digunakan
 }
 
 async function cleanFiles() {
@@ -24,8 +25,9 @@ async function cleanFiles() {
         const db = client.db(DB_NAME);
         const collection = db.collection<News>(COLLECTION_NAME);
 
-        const newsList = await collection.find({}).toArray();
-        console.log(`Total berita: ${newsList.length}`);
+        // Ambil berita yang **aktif** saja (isDeleted false atau undefined)
+    const newsList = await collection.find({ $or: [{ onDeleted: false }, { onDeleted: { $exists: false } }] }).toArray();
+    console.log(`Total berita aktif: ${newsList.length}`);
 
         // Kumpulkan semua file yang tercatat di DB
         const dbFiles = new Set<string>();
@@ -49,9 +51,9 @@ async function cleanFiles() {
             const fullPath = path.join(NEWS_FOLDER, file);
             if (!dbFiles.has(file)) {
                 fs.unlinkSync(fullPath);
-                console.log(`🗑️  File dihapus: ${file}`);
+                console.log(`✅ File ada di berita aktif: ${file}`);
             } else {
-                console.log(`✅ File ada di DB: ${file}`);
+                console.log(`❌ File orphan (tidak ada di database): ${file}`);
             }
         });
 

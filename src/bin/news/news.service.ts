@@ -8,21 +8,17 @@ import { newsSchema } from "./news.schema";
 
 export class NewsService {
     static async createNews(req: CreateNewsRequest) {
-        const ctx = "Create News"
-        const scp = "Product"
+        const ctx = "Create News";
+        const scp = "Product";
 
         const userRequest = Validator.Validate(newsSchema.createNews, req);
 
-        // Ambil PDF pertama saja
-        const pdfSingle = Array.isArray(userRequest.pdfUrl)
-            ? userRequest.pdfUrl[0]
-            : userRequest.pdfUrl;
-
+        // Cek apakah salah satu pdf sudah pernah dipakai
         const isNewsExist = await prisma.news.count({
             where: {
-                pdfUrl: pdfSingle,   // ini masih 1 diambil bagian pertama aja 
-                // OR: [{ pdfUrl: userRequest.pdfUrl }]
-                //  OR: userRequest.pdfUrl.map((pdf: string) => ({ pdfUrl: { has: pdf } }))
+                OR: userRequest.pdfUrl.map((pdf: string) => ({
+                    pdfUrl: { has: pdf }  // cek array berisi pdf tertentu
+                })),
             },
         });
 
@@ -34,15 +30,13 @@ export class NewsService {
         const create = await prisma.news.create({
             data: {
                 image: userRequest.image,
-                // pdfUrl: userRequest.pdfUrl,
-                pdfUrl: pdfSingle,
-                region: userRequest.region || "TULUNGAGUNG", // Default to "TULUNGAGUNG"
+                pdfUrl: userRequest.pdfUrl,   // ← simpan semua pdf
+                region: userRequest.region || "TULUNGAGUNG",
                 publishedAt: userRequest.publishedAt,
-            }
+            },
         });
 
-        loggerConfig.info(ctx, `Create News Success`, scp)
-
+        loggerConfig.info(ctx, `Create News Success`, scp);
         return create;
     }
 
@@ -97,6 +91,7 @@ export class NewsService {
         const isNewsExist = await prisma.news.findFirst({
             where: {
                 id: userRequest.id,
+                onDelete: false, // hanya jika belum terhapus
             }
         });
 
@@ -121,6 +116,7 @@ export class NewsService {
         const userRequest = Validator.Validate(newsSchema.getallnews, req);
 
         const filter: any = {
+            onDelete: false, // hanya ambil yang aktif
             ...(userRequest.search && {
                 name: {
                     contains: userRequest.search,
@@ -151,8 +147,16 @@ export class NewsService {
         ])
 
         if (result.length === 0) {
-            loggerConfig.error(ctx, "News not found");
-            throw new ErrorHandler(404, "Berita tidak ditemukan");
+            loggerConfig.warn(ctx, "Tidak ada news ditemukan");
+            return {
+                data: [],
+                meta: {
+                    totalItem,
+                    currentPage: userRequest.page,
+                    quantity: userRequest.quantity,
+                    totalPages: 0,
+                },
+            };
         }
 
 
@@ -180,6 +184,7 @@ export class NewsService {
         const isNewsExist = await prisma.news.findFirst({
             where: {
                 id: userRequest.id,
+                onDelete: false,    //cek yang belum terhapus
             }
         });
 
@@ -188,13 +193,15 @@ export class NewsService {
             throw new ErrorHandler(404, "Berita tidak ditemukan");
         }
 
-        await prisma.news.delete({
+        // Soft delete → update flag onDelete
+        await prisma.news.update({
             where: {
                 id: userRequest.id,
+            },
+            data: {
+                onDelete: true,
             }
-        })
-
-        removeFileIfExists(isNewsExist.image);
+        });
 
         loggerConfig.info(ctx, `Delete News Success`, scp)
 

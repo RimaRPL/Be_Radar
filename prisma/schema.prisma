@@ -10,11 +10,12 @@ datasource db {
 model News {
   id          String    @id @default(auto()) @map("_id") @db.ObjectId
   image       String // cover e-paper
-  pdfUrl      String? // file pdf e-paper
+  pdfUrl      String[] // file pdf e-paper
   publishedAt DateTime // tanggal terbit e-paper
   created_at  DateTime  @default(now())
   updatedAt   DateTime? @updatedAt
   region      Region
+  onDelete    Boolean   @default(false)
   savedBy     Saved[]
   comments    Comment[]
   likes       Like[]

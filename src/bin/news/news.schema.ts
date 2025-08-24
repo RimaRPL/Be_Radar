@@ -31,9 +31,11 @@ export class newsSchema {
         image: Joi.string().messages({
             "string.empty": "Cover e-paper wajib diisi",
         }),
-        pdfUrl: Joi.string().messages({
-            "string.empty": "File PDF e-paper wajib diisi",
+        pdfUrl: Joi.array().items(Joi.string()).messages({
+            "array.base": "File PDF e-paper harus berupa array string",
+            "array.includes": "Isi file PDF tidak valid",
         }),
+
         publishedAt: Joi.date().messages({
             "date.base": "Tanggal terbit tidak valid",
             "any.required": "Tanggal terbit wajib diisi",

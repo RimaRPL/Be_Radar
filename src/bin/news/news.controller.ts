@@ -22,11 +22,11 @@ export class NewsController {
 
       const request: CreateNewsRequest = {
         image: files.image[0].path,
-        // pdfUrl: files.pdfUrl[0].path, // ini buat yang satu
-        pdfUrl: files.pdfUrl.map(file => file.path), // ini buat yang lebih dari satu
+        pdfUrl: files.pdfUrl.map(file => file.path),  // ← array PDF
         region: req.body.region || "TULUNGAGUNG",
-        // publishedAt: new Date(),
-        publishedAt: req.body.publishedAt ? new Date(req.body.publishedAt) : new Date(),
+        publishedAt: req.body.publishedAt
+          ? new Date(req.body.publishedAt)
+          : new Date(),
       };
 
       const response = await NewsService.createNews(request);
@@ -46,53 +46,56 @@ export class NewsController {
   }
 
   static async updateNews(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
-    try {
-      const id = req.params.id; // ambil id dari URL
-      const request: UpdateNewsRequest = {
-        id,
-        ...req.body,
-      };
+  try {
+    const id = req.params.id;
+    const request: UpdateNewsRequest = { id, ...req.body };
 
-      const oldNews = await NewsService.getNewsById({ id });
+    const oldNews = await NewsService.getNewsById({ id });
 
-      // Hapus file gambar lama jika ada
-      if ((req.files as any)?.image && oldNews?.image) {
-        const oldImagePath = path.resolve("public", oldNews.image); // lebih aman
-        if (fs.existsSync(oldImagePath)) {
-          fs.unlinkSync(oldImagePath);
-        }
-        request.image = `news/${(req.files as any).image[0].filename}`;
-      }
-
-      // Hapus file PDF lama jika ada
-      if ((req.files as any)?.pdfUrl && Array.isArray(oldNews?.pdfUrl) && oldNews.pdfUrl.length > 0) {
-        oldNews.pdfUrl.forEach((pdfPath: string) => {
-          const fullPdfPath = path.resolve("public", pdfPath);
-          if (fs.existsSync(fullPdfPath)) {
-            fs.unlinkSync(fullPdfPath);
-          }
-        });
-
-        request.pdfUrl = (req.files as any).pdfUrl.map((f: any) => `news/${f.filename}`);
-      }
-
-      const response = await NewsService.updateNews(request);
-      Wrapper.success(res, true, response, "Berhasil memperbarui berita", 200)
-    } catch (error) {
-      // Hapus file baru jika terjadi error saat upload
-      if ((req.files as any)?.image) {
-        const newImagePath = path.resolve("public", "news", (req.files as any).image[0].filename);
-        if (fs.existsSync(newImagePath)) fs.unlinkSync(newImagePath);
-      }
-      if ((req.files as any)?.pdfUrl) {
-        (req.files as any).pdfUrl.forEach((f: any) => {
-          const newPdfPath = path.resolve("public", "news", f.filename);
-          if (fs.existsSync(newPdfPath)) fs.unlinkSync(newPdfPath);
-        });
-      }
-      next(error);
+    // update cover
+    if ((req.files as any)?.image && oldNews?.image) {
+      const oldImagePath = path.resolve("public", oldNews.image);
+      if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+      request.image = `news/${(req.files as any).image[0].filename}`;
     }
+
+    // gabungkan pdf baru ke array lama
+    if ((req.files as any)?.pdfUrl) {
+      const newPdfs = (req.files as any).pdfUrl.map((f: any) => `news/${f.filename}`);
+      request.pdfUrl = [...(oldNews?.pdfUrl || []), ...newPdfs];
+    }
+
+    // hapus PDF tertentu
+    if (req.body.removePdf) {
+      const toRemove = JSON.parse(req.body.removePdf);
+      request.pdfUrl = (oldNews?.pdfUrl || []).filter(pdf => !toRemove.includes(path.basename(pdf)));
+
+      // hapus file fisik
+      toRemove.forEach((fileName: string) => {
+        const fullPath = path.resolve("public/news", fileName);
+        if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+      });
+    }
+
+    const response = await NewsService.updateNews(request);
+    Wrapper.success(res, true, response, "Berhasil memperbarui berita", 200);
+
+  } catch (error) {
+    // rollback file baru jika gagal
+    if ((req.files as any)?.image) {
+      const newImagePath = path.resolve("public/news", (req.files as any).image[0].filename);
+      if (fs.existsSync(newImagePath)) fs.unlinkSync(newImagePath);
+    }
+    if ((req.files as any)?.pdfUrl) {
+      (req.files as any).pdfUrl.forEach((f: any) => {
+        const newPdfPath = path.resolve("public/news", f.filename);
+        if (fs.existsSync(newPdfPath)) fs.unlinkSync(newPdfPath);
+      });
+    }
+    next(error);
   }
+}
+
 
   static async getNewsById(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
     try {
