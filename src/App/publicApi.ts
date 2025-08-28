@@ -30,6 +30,8 @@ publicApi.post(`${globalEnv.PREFIX}/otp/confirm`, UserController.ConfirmOtp)
 /** Api for news */
 publicApi.get(`${globalEnv.PREFIX}/news`, NewsController.getAllNews);
 publicApi.get(`${globalEnv.PREFIX}/news/:id`, NewsController.getNewsById);
+publicApi.get(`${globalEnv.PREFIX}/news/:id/pages`, NewsController.getPdfPages); //buat menampilkan pdf
+
 
 /** Api for saved */
 publicApi.post(`${globalEnv.PREFIX}/saved/create`, Jwt.jwtValidator, savedController.createSaved);
