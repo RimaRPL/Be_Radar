@@ -24,7 +24,7 @@ export class Jwt {
       const decoded = jwt.verify(token, globalEnv.JWT_SECRET!) as JwtPayload
 
       console.log("✅ Decoded token:", decoded)
-      decoded.id = Crypto.decode(decoded.id)
+      // decoded.id = Crypto.decode(decoded.id)
 
       req.user = decoded
       next()

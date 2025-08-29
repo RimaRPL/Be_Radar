@@ -41,7 +41,7 @@ publicApi.delete(`${globalEnv.PREFIX}/saved/delete/:id`, Jwt.jwtValidator, saved
 /** Api for comments */
 publicApi.post(`${globalEnv.PREFIX}/comments/create`, Jwt.jwtValidator, CommentController.createComment);
 publicApi.put(`${globalEnv.PREFIX}/comments/update`, Jwt.jwtValidator, CommentController.updateComment);    
-publicApi.delete(`${globalEnv.PREFIX}/comments/delete/:id`, Jwt.jwtValidator, CommentController.deleteComent);
+publicApi.delete(`${globalEnv.PREFIX}/comments/delete/:id`, Jwt.jwtValidator, CommentController.deleteComment);
 publicApi.get(`${globalEnv.PREFIX}/comments/all`, Jwt.jwtValidator, CommentController.getAllComments);
 
 /** Api for likes */

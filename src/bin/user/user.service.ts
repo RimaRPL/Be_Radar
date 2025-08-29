@@ -59,17 +59,14 @@ export class UserService {
         const userRequest = Validator.Validate(userSchema.login, req);
 
         // Jangan pernah cari user pakai password langsung ke database
-        // cara berdasarkan email atau username yang aktif 
+        // cari berdasarkan email atau username yang aktif 
         const isUserExist = await prisma.user.findFirst({
             where: {
                 AND: [
                     {
                         OR: [
-                            // userRequest.email ? { email: userRequest.email } : {},
-                            // userRequest.username ? { username: userRequest.username } : {},
                             { username: userRequest.username },
                             { email: userRequest.email },
-                            // { password: userRequest.password },
                         ],
                     },
                     {
@@ -100,16 +97,19 @@ export class UserService {
 
         // menggenerate token stlh login berhasil
         const token = Jwt.createJwt({
-            id: Crypto.encode(isUserExist.id),
+            id: isUserExist.id,
             role: isUserExist.role,
             email: isUserExist.email,
             username: isUserExist.username
         });
 
-        // mengkirim token dan rolse sbg response
+        // mengkirim
         return {
-            token,
+            id: isUserExist.id, // tambahkan id
+            username: isUserExist.username,
+            email: isUserExist.email,
             role: isUserExist.role,
+            token,
         }
     }
 
@@ -174,11 +174,10 @@ export class UserService {
             email: userRequest.email ?? existing.email,
             username: userRequest.username ?? existing.username,
             password: updatedPassword,
-            // password: userRequest.password ?? existing.password,
             image: userRequest.image ?? existing.image,
         };
 
-        console.log('Akan di-update menjadi:', updateData);
+        console.log('Diupdate menjadi:', updateData);
 
         // update data user di database
         const updated = await prisma.user.update({
