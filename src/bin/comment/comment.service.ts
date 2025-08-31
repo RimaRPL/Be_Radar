@@ -6,7 +6,35 @@ import { commentModel, deleteModel, getcommentModel } from "./comment.model";
 import { CommentSchema } from "./comment.schema";
 
 import Filter from "bad-words";
+
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
+import localizedFormat from "dayjs/plugin/localizedFormat";
+import 'dayjs/locale/id';
+
+dayjs.extend(relativeTime);
+dayjs.extend(localizedFormat);
+dayjs.locale('id');
+
 const filter = new Filter();
+
+// buat format waktu di komentar
+function formatCommentTime(date: Date) {
+  const now = dayjs();
+  const created = dayjs(date);
+
+  if (now.diff(created, 'minute') < 60) {
+    return created.fromNow(); // "5 menit yang lalu"
+  } else if (now.isSame(created, 'day')) {
+    return created.format('HH:mm'); // "14:32"
+  } else if (now.subtract(1, 'day').isSame(created, 'day')) {
+    return `Kemarin ${created.format('HH:mm')}`; // "Kemarin 14:32"
+  } else if (now.isSame(created, 'year')) {
+    return created.format('DD MMM'); // "12 Agu"
+  } else {
+    return created.format('DD MMM YYYY'); // "12 Agu 2024"
+  }
+}
 
 export class commentService {
  static async createComment(req: commentModel, userId: string) {
@@ -126,6 +154,11 @@ export class commentService {
       prisma.comment.count({ where: filterWhere }),
     ]);
 
+     const resultWithTimeAgo = result.map(comment => ({
+      ...comment,
+      timeAgo: formatCommentTime(comment.created_at),
+    })); //buat waktu
+
     // JANGAN lempar 404 kalau kosong — biar frontend tetap dapat JSON valid
     const metaData = {
       totalItem,
@@ -138,7 +171,7 @@ export class commentService {
 
     return {
       success: true,
-      data: result,
+      data: resultWithTimeAgo,
       metaData,
     };
   }

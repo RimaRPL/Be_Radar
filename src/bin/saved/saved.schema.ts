@@ -7,10 +7,10 @@ export class SavedNewsSchema {
       "string.length": "News ID harus 24 karakter",
       "any.required": "News ID wajib diisi",
     }),
-    userId: Joi.string().length(24).optional().messages({
-      "string.base": "User ID harus berupa string",
-      "string.length": "User ID harus 24 karakter",
-    }),
+    // userId: Joi.string().length(24).optional().messages({
+    //   "string.base": "User ID harus berupa string",
+    //   "string.length": "User ID harus 24 karakter",
+    // }),
   });
   static readonly GetSavedNews = Joi.object({
     search: Joi.string().allow("", null),

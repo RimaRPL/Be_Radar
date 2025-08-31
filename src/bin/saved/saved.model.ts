@@ -3,7 +3,7 @@ export interface CreateSavedNews {
 }
 
 export interface GetSavedNews {
-    newsId: string;
+    // newsId: string;
     search?: string;
     periode: number;
     page: number;
@@ -12,4 +12,5 @@ export interface GetSavedNews {
 
 export interface DeleteSavedNews {
     id: string;
+    userId: string; // tambahin supaya bisa validasi siapa yang hapus
 }
