@@ -46,38 +46,57 @@ export class NewsController {
     }
   }
 
-  static async updateNews(req: CustomRequest, res: Response, next: NextFunction): Promise<void> {
+  static async updateNews(
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
     try {
       const id = req.params.id;
       const request: UpdateNewsRequest = { id, ...req.body };
 
       const oldNews = await NewsService.getNewsById({ id });
 
-      // update cover
+      // helper: normalisasi path
+    const normalizeFileName = (filePath: string) => path.basename(filePath);
+
+      // update cover image
       if ((req.files as any)?.image && oldNews?.image) {
-        const oldImagePath = path.resolve("public", oldNews.image);
-        if (fs.existsSync(oldImagePath)) fs.unlinkSync(oldImagePath);
+        const oldImagePath = path.join("public", normalizeFileName(oldNews.image));
+        console.log("Try delete image:", oldImagePath);
+        if (fs.existsSync(oldImagePath)) {
+          fs.unlinkSync(oldImagePath);
+          console.log("Deleted:", oldImagePath);
+        }
         request.image = `news/${(req.files as any).image[0].filename}`;
       }
 
-      // start dari pdf lama
+      // mulai dari pdf lama
       let updatedPdfs = oldNews?.pdfUrl || [];
 
       // hapus PDF tertentu
       if (req.body.removePdf) {
         const toRemove = JSON.parse(req.body.removePdf);
-        updatedPdfs = updatedPdfs.filter(pdf => !toRemove.includes(path.basename(pdf)));
+        updatedPdfs = updatedPdfs.filter(
+          (pdf) => !toRemove.includes(path.basename(pdf))
+        );
 
         // hapus file fisik
         toRemove.forEach((fileName: string) => {
-          const fullPath = path.resolve("public/news", fileName);
-          if (fs.existsSync(fullPath)) fs.unlinkSync(fullPath);
+          const fullPath = path.join("public/news", normalizeFileName(fileName));
+          console.log("Try delete pdf:", fullPath);
+          if (fs.existsSync(fullPath)) {
+            fs.unlinkSync(fullPath);
+            console.log("Deleted:", fullPath);
+          }
         });
       }
 
       // tambahkan PDF baru
       if ((req.files as any)?.pdfUrl) {
-        const newPdfs = (req.files as any).pdfUrl.map((f: any) => `news/${f.filename}`);
+        const newPdfs = (req.files as any).pdfUrl.map(
+          (f: any) => `news/${f.filename}`
+        );
         updatedPdfs = [...updatedPdfs, ...newPdfs];
       }
 
@@ -85,16 +104,18 @@ export class NewsController {
 
       const response = await NewsService.updateNews(request);
       Wrapper.success(res, true, response, "Berhasil memperbarui berita", 200);
-
     } catch (error) {
       // rollback file baru jika gagal
       if ((req.files as any)?.image) {
-        const newImagePath = path.resolve("public/news", (req.files as any).image[0].filename);
+        const newImagePath = path.join(
+          "public/news",
+          (req.files as any).image[0].filename
+        );
         if (fs.existsSync(newImagePath)) fs.unlinkSync(newImagePath);
       }
       if ((req.files as any)?.pdfUrl) {
         (req.files as any).pdfUrl.forEach((f: any) => {
-          const newPdfPath = path.resolve("public/news", f.filename);
+          const newPdfPath = path.join("public/news", f.filename);
           if (fs.existsSync(newPdfPath)) fs.unlinkSync(newPdfPath);
         });
       }
