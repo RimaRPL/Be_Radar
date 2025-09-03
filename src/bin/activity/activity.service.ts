@@ -7,8 +7,13 @@ export class ActivityService {
         const scp = "getUserComments"
 
         const comment = await prisma.comment.findMany({
-            where: {userId},
-            orderBy: {created_at: "desc"},
+            where: {
+                userId,
+                news: {
+                    onDelete: false   // filter comment di berita yang belum di hapus 
+                }
+            },
+            orderBy: { created_at: "desc" },
             include: {
                 news: {
                     select: {
@@ -40,8 +45,11 @@ export class ActivityService {
         const scp = "getUserLikes"
 
         const likes = await prisma.like.findMany({
-            where: {userId},
-            orderBy: {likedAt: "desc"},
+            where: {
+                userId,
+                news: { onDelete: false }, // hanya ambil like dari news aktif
+            },
+            orderBy: { likedAt: "desc" },
             include: {
                 news: {
                     select: {
