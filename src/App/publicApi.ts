@@ -46,6 +46,11 @@ publicApi.get(`${globalEnv.PREFIX}/comments/all`, Jwt.jwtValidator, CommentContr
 
 /** Api for likes */
 publicApi.post(`${globalEnv.PREFIX}/likes`, Jwt.jwtValidator, LikeController.likeNews);
+publicApi.get(
+  `${globalEnv.PREFIX}/likes/:id`, 
+  Jwt.jwtValidator, 
+  LikeController.getLikes
+);
 
 /** Api for activity */
 publicApi.get(`${globalEnv.PREFIX}/activity/comments`, Jwt.jwtValidator, activityController.getUserComents);

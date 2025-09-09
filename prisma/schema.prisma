@@ -68,6 +68,8 @@ model Like {
   newsId String @db.ObjectId
 
   likedAt DateTime @default(now())
+
+  @@unique([userId, newsId])  // 1 user hanya bisa like 1 kali per news
 }
 
 model Otp {

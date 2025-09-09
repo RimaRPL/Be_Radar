@@ -12,4 +12,17 @@ export class LikeController {
             next(error);
         }
     }
+
+    static async getLikes(
+    req: CustomRequest,
+    res: Response,
+    next: NextFunction
+  ): Promise<void> {
+    try {
+      const response = await LikeService.getLikes(req);
+      Wrapper.success(res, true, response, response.message, response.status);
+    } catch (error) {
+      next(error);
+    }
+  }
 }

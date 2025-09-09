@@ -10,14 +10,12 @@ export class LikeService {
     const ctx = "likeNews";
     const scp = "like";
 
-    // ambil user dari JWT
     const userId = req.user?.id;
     if (!userId) {
       loggerConfig.error(ctx, "User ID is missing from token", scp);
       throw new Error("User ID is missing from token");
     }
 
-    // validasi body
     const payload = Validator.Validate(
       LikeSchema.likeNews,
       req.body as LikeModel
@@ -36,7 +34,18 @@ export class LikeService {
       await prisma.like.delete({
         where: { id: existingLike.id },
       });
-      return { message: "Berhasil unlike berita", status: 200, liked: false };
+
+      // hitung ulang jumlah like
+      const count = await prisma.like.count({
+        where: { newsId: payload.newsId },
+      });
+
+      return {
+        message: "Berhasil unlike berita",
+        status: 200,
+        liked: false,
+        likesCount: count,
+      };
     }
 
     // belum like → buat like
@@ -48,6 +57,42 @@ export class LikeService {
     });
 
     loggerConfig.info(ctx, "Like created successfully", scp);
-    return { message: "Berhasil like berita", status: 200, liked: true };
+
+    const count = await prisma.like.count({
+      where: { newsId: payload.newsId },
+    });
+
+    return {
+      message: "Berhasil like berita",
+      status: 200,
+      liked: true,
+      likesCount: count,
+    };
+  }
+
+  static async getLikes(req: CustomRequest) {
+    const ctx = "getLikes";
+    const scp = "like";
+
+    const userId = req.user?.id;
+    if (!userId) {
+      loggerConfig.error(ctx, "User ID is missing from token", scp);
+      throw new Error("User ID is missing from token");
+    }
+
+    const newsId = req.params.id;
+
+    // hitung jumlah like
+    const [count, existingLike] = await Promise.all([
+      prisma.like.count({ where: { newsId } }),
+      prisma.like.findFirst({ where: { newsId, userId } }),
+    ]);
+
+    return {
+      message: "Get likes success",
+      status: 200,
+      likesCount: count,
+      likedByUser: !!existingLike,
+    };
   }
 }
