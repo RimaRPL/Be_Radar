@@ -146,7 +146,7 @@ export class commentService {
             select: {
               id: true,
               username: true,
-              image: true,  // <--- tambahkan ini
+              image: true,  // buat image
             },
           },
         },
@@ -159,7 +159,7 @@ export class commentService {
       timeAgo: formatCommentTime(comment.created_at),
     })); //buat waktu
 
-    // JANGAN lempar 404 kalau kosong — biar frontend tetap dapat JSON valid
+  
     const metaData = {
       totalItem,
       currentPage: userRequest.page,
